@@ -1,0 +1,63 @@
+service: pipeline-lambda
+
+provider:
+  name: aws
+  runtime: python3.6
+
+# you can overwrite defaults here
+#  stage: dev
+  region: eu-central-1
+  memorySize: 128
+  timeout: 300
+
+  environment:
+    PIPELINE_TEMPLATES_BUCKET: pipeline-templates-bucket-0001
+
+
+# you can add statements to the Lambda function's IAM Role here
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "codepipeline:PutJobFailureResult"
+        - "codepipeline:PutJobSuccessResult"
+      Resource: "*"
+    - Effect: "Allow"
+      Action:
+        - "cloudformation:*"
+        - "iam:PassRole"
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource:
+        - ${self:resources.Outputs.PipelineTemplatesBucket.Value}
+        - Fn::Join:
+          - ""
+          - - ${self:resources.Outputs.PipelineTemplatesBucket.Value}
+            - "/*"
+
+package:
+  include:
+    - utils/**
+
+functions:
+  pipeline-lambda:
+    handler: pipeline_lambda/pipeline_lambda.handler
+
+resources:
+  Resources:
+    PipelineTemplatesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.PIPELINE_TEMPLATES_BUCKET}
+
+  Outputs:
+    PipelineTemplatesBucket:
+      Export:
+        Name: PipelineTemplatesBucket
+      Value:
+        Fn::GetAtt: PipelineTemplatesBucket.Arn
+
+
+plugins:
+  - serverless-python-requirements

@@ -1,0 +1,9 @@
+{
+  "name": "pipeline-lambda",
+  "description": "",
+  "version": "0.1.0",
+  "dependencies": {},
+  "devDependencies": {
+    "serverless-python-requirements": "^3.0.11"
+  }
+}
