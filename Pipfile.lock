@@ -35,23 +35,30 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:edd35eb7cd8d56f08e65b112206936cf9f76bb406fb15f63075ff72331ef6f5f",
-                "sha256:332c6a17fd695581dd6f9ed825ce13c2d5ee3a6f5e1b079bed0ff7293809faf0"
+                "sha256:a12fc768c6ffa5c7fdc74557ec0c6033c47b4b8359c2ebf38adadf8f6d6ba32b",
+                "sha256:f0e0f7d8c3771b6e664336cec3fa7488817ffafbe3f884ea4cac5de913f7c7ed"
             ],
-            "version": "==1.4.8"
+            "version": "==1.5.2"
         },
         "botocore": {
             "hashes": [
-                "sha256:98f10a24b4de64b6d74cc5dfb5a5d13877df619880992fc649ca7ae0ab745253",
-                "sha256:1c189f4f1b3a834c1679c875912f4d54553ded215e7060812c82494fa4883b5b"
+                "sha256:590059803bc754a023b1481651a3c14750c9dce8dbc0b6fd15fac6d8e7c9114c",
+                "sha256:18486a4777a6fdfc9ac73f14a19375253ceb3f275757e65883869cff7abb8a3f"
             ],
-            "version": "==1.8.11"
+            "version": "==1.8.16"
         },
         "cfn-flip": {
             "hashes": [
-                "sha256:70f384ccdcd168e4cfbfa63dbb98390f7e3c5b956ba0922c1181a845f3edbc23"
+                "sha256:9e53c920be4ac1950067dbff4b6303e63be0e7af415170e16789a6b2f533090a"
             ],
-            "version": "==0.3.0"
+            "version": "==1.0.0"
+        },
+        "click": {
+            "hashes": [
+                "sha256:29f99fc6125fbc931b758dc053b3114e55c77a6e4c6c3a2674a2dc986016381d",
+                "sha256:f15516df478d5a56180fbf80e68f206010e6d160fc39fa508b65e035fd75130b"
+            ],
+            "version": "==6.7"
         },
         "docutils": {
             "hashes": [

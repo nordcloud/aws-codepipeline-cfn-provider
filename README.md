@@ -4,7 +4,25 @@ aws-codepipeline-cfn-provider is a lambda that works very similar to codepipelin
 However it uploads template to s3 bucket before creating stack so it can be used to deploy stacks > 51k.
 
 ## Deployment
-TODO
+aws-codepipeline-cfn-provider use `Pipenv` to manage python dependencies.
+#### Create virtualenv
+```
+pipenv shell
+pipenv --python 3.6.1
+```
+
+#### Install dependencies
+```
+pipend install
+```
+
+#### Upload zip to s3 bucket
+Modify bucket name and bucket key in `s3_deploy.sh` script
+Run `s3_deploy.sh` to generate zip package and upload file to s3 bucket.
+
+#### Lambda
+Create lambda in AWS console using s3 file url and handler name: `pipeline_lambda/pipeline_lambda.handler`
+
 
 ## UserParameters
 User parameters are used to configure lambda and should be passed in JSON format
@@ -76,3 +94,4 @@ User parameters are used to configure lambda and should be passed in JSON format
     "OutputFileName": "out.json"
 }
 ```
+
