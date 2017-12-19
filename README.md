@@ -1,7 +1,7 @@
 # aws-codepipeline-cfn-provider
 
-aws-codepipeline-cfn-provider is a lambda that works very similar to codepipeline build in cfn provider.
-However it uploads template to s3 bucket before creating stack so it can be used to deploy stacks > 51k.
+aws-codepipeline-cfn-provider is a lambda that works very similar to AWS code-pipeline built in cfn provider.
+However, it uploads templates to s3 bucket before creating stack so it can be used to deploy stacks > 51k.
 
 ## Deployment
 aws-codepipeline-cfn-provider use `Pipenv` to manage python dependencies.
@@ -21,8 +21,62 @@ Modify bucket name and bucket key in `s3_deploy.sh` script
 Run `s3_deploy.sh` to generate zip package and upload file to s3 bucket.
 
 #### Lambda
-Create lambda in AWS console using s3 file url and handler name: `pipeline_lambda/pipeline_lambda.handler`
+Create lambda in AWS console using zipped package from s3 bucket.
+Lambda handler name should be set to: `pipeline_lambda/pipeline_lambda.handler`
 
+## IAM permissions
+aws-codepipeline-cfn-provider requires at least following permissions:
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "codepipeline:PutJobFailureResult",
+                "codepipeline:PutJobSuccessResult"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "cloudformation:DescribeStacks",
+                "cloudformation:DeleteStack",
+                "cloudformation:CreateStack",
+                "cloudformation:UpdateStack",
+                "cloudformation:DescribeChangeSet",
+                "cloudformation:CreateChangeSet",
+                "cloudformation:ExecuteChangeSet",
+                "cloudformation:SetStackPolicy",
+                "cloudformation:DeleteChangeSet",
+                "iam:PassRole"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::your-pipeline-templates-bucket/*"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "s3:GetBucketLocation"
+            ],
+            "Resource": [
+                "arn:aws:s3:::your-pipeline-templates-bucket"
+            ],
+            "Effect": "Allow"
+        }
+    ]
+}
+
+```
 
 ## UserParameters
 User parameters are used to configure lambda and should be passed in JSON format

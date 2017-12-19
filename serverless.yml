@@ -23,18 +23,31 @@ provider:
       Resource: "*"
     - Effect: "Allow"
       Action:
-        - "cloudformation:*"
+        - "cloudformation:DescribeStacks"
+        - "cloudformation:DeleteStack"
+        - "cloudformation:CreateStack"
+        - "cloudformation:UpdateStack"
+        - "cloudformation:DescribeChangeSet"
+        - "cloudformation:CreateChangeSet"
+        - "cloudformation:ExecuteChangeSet"
+        - "cloudformation:SetStackPolicy"
+        - "cloudformation:DeleteChangeSet"
         - "iam:PassRole"
       Resource: "*"
     - Effect: Allow
       Action:
-        - s3:*
+        - s3:GetObject
+        - s3:PutObject
       Resource:
-        - ${self:resources.Outputs.PipelineTemplatesBucket.Value}
         - Fn::Join:
           - ""
           - - ${self:resources.Outputs.PipelineTemplatesBucket.Value}
             - "/*"
+    - Effect: Allow
+      Action:
+        - s3:GetBucketLocation
+      Resource:
+        - ${self:resources.Outputs.PipelineTemplatesBucket.Value}
 
 package:
   include:
