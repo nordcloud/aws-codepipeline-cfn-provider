@@ -100,6 +100,14 @@ User parameters are used to configure lambda and should be passed in a JSON form
 
 ## Examples
 
+### Pipeline examples
+#### Create stack
+![pipeline create stack example](https://s3.eu-central-1.amazonaws.com/nordcloud-rnd-github-src/nc_pipeline_1.png)
+
+#### Create and execute change set with manual approvement
+![pipeline change set example](https://s3.eu-central-1.amazonaws.com/nordcloud-rnd-github-src/nc_pipeline_2.png)
+
+### Configuration examples
 #### Delete stack:
 ```
 {
