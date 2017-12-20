@@ -1,31 +1,32 @@
 # aws-codepipeline-cfn-provider
 
-aws-codepipeline-cfn-provider is a lambda that works very similar to AWS code-pipeline built in cfn provider.
-However, it uploads templates to s3 bucket before creating stack so it can be used to deploy stacks > 51k.
+CodePipeline built-in cfn provider has a limitation that a cfn template size can't exceed 51kb. 
+
+`aws-codepipeline-cfn-provider` solves this problem by providing an alternative cfn provider implemented as a Lambda. 
+
+Instead of passing templates directly, it uploads templates to s3 bucket before creating a stack so it can be used to deploy stacks from templates with size > 51kb.
 
 ## Deployment
-aws-codepipeline-cfn-provider use `Pipenv` to manage python dependencies.
-#### Create virtualenv
+
+aws-codepipeline-cfn-provider uses `Pipenv` to manage Python dependencies.
+
+#### Create virtualenv and install dependencies
 ```
-pipenv shell
-pipenv --python 3.6.1
+pipenv --three
+pipenv install
 ```
 
-#### Install dependencies
-```
-pipend install
-```
 
-#### Upload zip to s3 bucket
+#### Upload zip to an S3 bucket
 Modify bucket name and bucket key in `s3_deploy.sh` script
-Run `s3_deploy.sh` to generate zip package and upload file to s3 bucket.
+Run `s3_deploy.sh` to generate a zip package and upload file to S3 bucket.
 
 #### Lambda
-Create lambda in AWS console using zipped package from s3 bucket.
+Create a Lambda in AWS console using zipped package from s3 bucket.
 Lambda handler name should be set to: `pipeline_lambda/pipeline_lambda.handler`
 
 ## IAM permissions
-aws-codepipeline-cfn-provider requires at least following permissions:
+aws-codepipeline-cfn-provider requires at least the following permissions:
 ```
 {
     "Version": "2012-10-17",
@@ -79,7 +80,8 @@ aws-codepipeline-cfn-provider requires at least following permissions:
 ```
 
 ## UserParameters
-User parameters are used to configure lambda and should be passed in JSON format
+User parameters are used to configure lambda and should be passed in a JSON format:
+
 ```
 {
     "Operation": "operation_name", [CREATE_UPDATE_STACK, DELETE_STACK, CREATE_REPLACE_CHANGE_SET, EXECUTE_CHANGE_SET]
@@ -94,7 +96,7 @@ User parameters are used to configure lambda and should be passed in JSON format
 ```
 
 ## Lambda environment
-- PIPELINE_TEMPLATES_BUCKET - stack name used to upload cfn templates
+- `PIPELINE_TEMPLATES_BUCKET` - S3 bucket used to upload cfn templates to
 
 ## Examples
 
@@ -149,3 +151,8 @@ User parameters are used to configure lambda and should be passed in JSON format
 }
 ```
 
+## LICENCE 
+
+Apache License 2.0
+
+Copyright Nordcloud OY
