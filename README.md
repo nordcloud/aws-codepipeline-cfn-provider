@@ -6,6 +6,10 @@ CodePipeline built-in cfn provider has a limitation that a cfn template size can
 
 Instead of passing templates directly, it uploads templates to s3 bucket before creating a stack so it can be used to deploy stacks from templates with size > 51kb.
 
+## Requirements
+Lambda requires an s3 bucket used to store cfn templates.
+The bucket name is set by `PIPELINE_TEMPLATES_BUCKET` environment variable.
+
 ## Deployment
 
 aws-codepipeline-cfn-provider uses `Pipenv` to manage Python dependencies.
@@ -84,14 +88,15 @@ User parameters are used to configure lambda and should be passed in a JSON form
 
 ```
 {
-    "Operation": "operation_name", [CREATE_UPDATE_STACK, DELETE_STACK, CREATE_REPLACE_CHANGE_SET, EXECUTE_CHANGE_SET]
+    "ActionMode": "operation_name", [CREATE_UPDATE, DELETE_ONLY, CHANGE_SET_REPLACE, CHANGE_SET_EXECUTE]
     "StackName": "stack_name",
     "ChangeSetName": "change_set_name",
-    "Template": "ArtifactName::TemplateFile",
-    "Config": "ArtifactName::ConfigFile",
-    "RoleName": "role_name_to_execute_cfn_template",
+    "TemplatePath": "ArtifactName::TemplateFile",
+    "ConfigPath": "ArtifactName::ConfigFile",
+    "RoleArn": "cfn_role_arn",
     "OutputFileName": "artifact_output_file_name" (output.json is default),
-    "ParametersOverride": {"param": "value"}
+    "ParameterOverrides": {"param": "value"}
+    "Capabilities": ["CAPABILITY_NAMED_IAM", "CAPABILITY_IAM"] list or string
 }
 ```
 
@@ -111,21 +116,22 @@ User parameters are used to configure lambda and should be passed in a JSON form
 #### Delete stack:
 ```
 {
-    "Operation": "DELETE_STACK",
     "StackName": "test_stack",
-    "RoleName": "cfn_role"
+    "ActionMode": "DELETE_ONLY,
+    "RoleArn": "cfn_role_arn",
+
 }
 ```
 
 #### Create or update stack:
 ```
 {
-    "Operation": "CREATE_UPDATE_STACK",
+    "ActionMode": "CREATE_UPDATE",
     "StackName": "test_stack",
-    "RoleName": "cfn_role",
-    "Template": "MyApp::template.json",
-    "Config": "MyApp::config.json",
-    "ParametersOverride": {
+    "RoleArn": "cfn_role_arn",
+    "TemplatePath": "MyApp::template.json",
+    "ConfigPath": "MyApp::config.json",
+    "ParameterOverrides": {
         "param1": "value1",
         "param2": { "Fn::GetParam" : [ "MyApp", "config2.json", "param2" ] }
     }
@@ -135,13 +141,13 @@ User parameters are used to configure lambda and should be passed in a JSON form
 #### Create change set:
 ```
 {
-    "Operation": "CREATE_REPLACE_CHANGE_SET",
+    "ActionMode": "CHANGE_SET_REPLACE",
     "StackName": "test_stack",
     "ChangeSetName": "test_change_set",
-    "RoleName": "cfn_role",
-    "Template": "MyApp::template.json",
-    "Config": "MyApp::config.json",
-    "ParametersOverride": {
+    "RoleArn": "cfn_role_arn",
+    "TemplatePath": "MyApp::template.json",
+    "ConfigPath": "MyApp::config.json",
+    "ParameterOverrides": {
         "param1": "value1",
         "param2": { "Fn::GetParam" : [ "MyApp", "config2.json", "param2" ] }
     }
@@ -151,10 +157,10 @@ User parameters are used to configure lambda and should be passed in a JSON form
 #### Execute change set:
 ```
 {
-    "Operation": "EXECUTE_CHANGE_SET",
+    "ActionMode": "CHANGE_SET_EXECUTE",
     "StackName": "test_stack",
     "ChangeSetName": "test_change_set",
-    "RoleName": "cfn_role"
+    "RoleArn": "cfn_role_arn"
     "OutputFileName": "out.json"
 }
 ```

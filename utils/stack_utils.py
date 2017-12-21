@@ -65,18 +65,18 @@ def create_stack(cf, stack, template_url, config: PipelineStackConfig, role_arn=
     :param role_arn: role to be assumed by cfn
     """
     logger.debug("create_stack " + template_url)
-    capabilities = ['CAPABILITY_NAMED_IAM']
 
     kwargs = {}
     if config.StackPolicy is not None:
         kwargs['StackPolicyBody'] = json.dumps(config.StackPolicy)
     if role_arn is not None:
         kwargs['RoleARN'] = role_arn
+    if config.Capabilities is not None:
+        kwargs['Capabilities'] = config.Capabilities if type(config.Capabilities) is list else [config.Capabilities]
 
     cf.create_stack(
         StackName=stack,
         TemplateURL=template_url,
-        Capabilities=capabilities,
         Parameters=config.Parameters,
         Tags=config.Tags,
         **kwargs)
@@ -91,17 +91,17 @@ def update_stack(cf, stack, template_url, config: PipelineStackConfig, role_arn=
     :param config: Obj with tags, parameters and stack policy
     :param role_arn: role to be assumed by cfn
     """
-    capabilities = ['CAPABILITY_NAMED_IAM']
     try:
         kwargs = {}
         if config.StackPolicy is not None:
             kwargs['StackPolicyBody'] = json.dumps(config.StackPolicy)
         if role_arn is not None:
             kwargs['RoleARN'] = role_arn
+        if config.Capabilities is not None:
+            kwargs['Capabilities'] = config.Capabilities if type(config.Capabilities) is list else [config.Capabilities]
 
         cf.update_stack(
             StackName=stack,
-            Capabilities=capabilities,
             TemplateURL=template_url,
             Parameters=config.Parameters,
             Tags=config.Tags,
@@ -145,7 +145,7 @@ def change_set_exists(cf, stack, change_set):
 
 
 def create_change_set(cf, cfn_stack_name, cfn_change_set_name, template_url,
-                      config: PipelineStackConfig, update=False, role_arn=None):
+                      config: PipelineStackConfig, role_arn=None):
     """Creates new change set
 
     :param cf: cfn client
@@ -153,23 +153,21 @@ def create_change_set(cf, cfn_stack_name, cfn_change_set_name, template_url,
     :param cfn_change_set_name: change set name
     :param template_url: s3 url with template file
     :param config: config object with parameters, tags etc
-    :param update: True if update
     :param role_arn: role arn to be used by cfn
     """
     logger.debug("create_change-set, template: " + template_url)
-
-    capabilities = ['CAPABILITY_NAMED_IAM']
-    change_set_type = 'UPDATE' if update is True else 'CREATE'
+    change_set_type = 'UPDATE' if config.Update is True else 'CREATE'
 
     kwargs = {}
     if role_arn is not None:
         kwargs['RoleARN'] = role_arn
+    if config.Capabilities is not None:
+        kwargs['Capabilities'] = config.Capabilities if type(config.Capabilities) is list else [config.Capabilities]
 
     cf.create_change_set(
         StackName=cfn_stack_name,
         ChangeSetName=cfn_change_set_name,
         TemplateURL=template_url,
-        Capabilities=capabilities,
         Parameters=config.Parameters,
         ChangeSetType=change_set_type,
         **kwargs)

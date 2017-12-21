@@ -18,12 +18,12 @@ class PipelineUserParameters:
         :param job_data: The job data structure containing the UserParameters string which should be a valid JSON structure
         :param lambda_ctx: Lambda context
 
-        Possible operations:
-            - CREATE_UPDATE_STACK
-            - DELETE_STACK
-            - REPLACE_STACK
-            - CREATE_REPLACE_CHANGE_SET
-            - EXECUTE_CHANGE_SET
+        Possible ActionMode:
+            - CREATE_UPDATE
+            - DELETE_ONLY
+            - REPLACE_ON_FAILURE
+            - CHANGE_SET_REPLACE
+            - CHANGE_SET_EXECUTE
         """
         logger.debug("getting user parameters")
         user_parameters = None
@@ -39,46 +39,47 @@ class PipelineUserParameters:
         except Exception as e:
             raise Exception('UserParameters could not be decoded as JSON: {} {}'.format(user_parameters, str(e)))
 
-        if 'Operation' not in decoded_parameters:
-            raise Exception('Your UserParameters JSON must include the Operation')
+        if 'ActionMode' not in decoded_parameters:
+            raise Exception('Your UserParameters JSON must include the ActionMode')
 
-        if decoded_parameters['Operation'] not in ['CREATE_UPDATE_STACK', 'DELETE_STACK', 'REPLACE_STACK',
-                                                   'CREATE_REPLACE_CHANGE_SET', 'EXECUTE_CHANGE_SET']:
-            raise Exception("Invalid operation parameter")
+        if decoded_parameters['ActionMode'] not in ['CREATE_UPDATE', 'DELETE_ONLY', 'REPLACE_ON_FAILURE',
+                                                    'CHANGE_SET_REPLACE', 'CHANGE_SET_EXECUTE']:
+            raise Exception("Invalid ActionMode parameter")
 
         if 'StackName' not in decoded_parameters:
             raise Exception('Your UserParameters JSON must include the StackName')
 
-        if 'ChangeSetName' not in decoded_parameters and decoded_parameters['Operation'] \
-                in ['CREATE_REPLACE_CHANGE_SET', 'EXECUTE_CHANGE_SET']:
+        if 'ChangeSetName' not in decoded_parameters and decoded_parameters['ActionMode'] \
+                in ['CHANGE_SET_REPLACE', 'CHANGE_SET_EXECUTE']:
             raise Exception('Your UserParameters JSON must include the ChangeSetName')
 
-        if 'Template' not in decoded_parameters and decoded_parameters['Operation'] \
-                in ['CREATE_UPDATE_STACK', 'REPLACE_STACK', 'CREATE_REPLACE_CHANGE_SET']:
-            raise Exception('Your UserParameters JSON must include the Template')
+        if 'TemplatePath' not in decoded_parameters and decoded_parameters['ActionMode'] \
+                in ['CREATE_UPDATE', 'REPLACE_ON_FAILURE', 'CHANGE_SET_REPLACE']:
+            raise Exception('Your UserParameters JSON must include the TemplatePath')
 
-        self.Operation = decoded_parameters['Operation']
+        self.ActionMode = decoded_parameters['ActionMode']
         self.StackName = decoded_parameters['StackName']
         self.ChangeSetName = decoded_parameters.get('ChangeSetName', None)
-        self.RoleName = decoded_parameters.get('RoleName', None)
+        self.RoleArn = decoded_parameters.get('RoleArn', None)
         self.OutputFileName = decoded_parameters.get('OutputFileName', 'output.json')
+        self.Capabilities = decoded_parameters.get('Capabilities', None)
         try:
-            if decoded_parameters.get('Template', None) is not None:
-                self.TemplateArtifact,  self.TemplateFile = decoded_parameters['Template'].split('::')
+            if decoded_parameters.get('TemplatePath', None) is not None:
+                self.TemplateArtifact,  self.TemplateFile = decoded_parameters['TemplatePath'].split('::')
         except Exception as _:
-            raise Exception('Invalid Template parameter, should be ArtifactName::TemplateFile')
+            raise Exception('Invalid TemplatePath parameter, should be ArtifactName::TemplateFile')
         try:
-            if decoded_parameters.get('Config', None) is not None:
-                self.ConfigArtifact, self.ConfigFile = decoded_parameters['Config'].split('::')
+            if decoded_parameters.get('ConfigPath', None) is not None:
+                self.ConfigArtifact, self.ConfigFile = decoded_parameters['ConfigPath'].split('::')
         except Exception as _:
-            raise Exception('Invalid Config parameter, should be ArtifactName::ConfigFile')
-        self.ParametersOverride = decoded_parameters.get('ParametersOverride', {})
-        if type(self.ParametersOverride) is not dict:
-            raise Exception('Invalid Config parameter, ParametersOverride should be a dict')
+            raise Exception('Invalid ConfigPath parameter, should be ArtifactName::ConfigFile')
+        self.ParameterOverrides = decoded_parameters.get('ParameterOverrides', {})
+        if type(self.ParameterOverrides) is not dict:
+            raise Exception('Invalid ParameterOverrides parameter, ParametersOverride should be a dict')
 
 
 class PipelineStackConfig:
-    def __init__(self, config, template, override, update=False):
+    def __init__(self, config, template, override, update=False, capabilities=None):
         """Generates Stack config - parameters, tags and cfn policy
         If update is True and parameter doesn't exist in the config previous value will be used
 
@@ -97,6 +98,8 @@ class PipelineStackConfig:
         for tag in self.Tags:
             tags.append({'Key': tag, 'Value': self.Tags[tag]})
         self.Tags = tags
+        self.Capabilities = capabilities
+        self.Update = update
 
         parameters = []
         if 'Parameters' in template:

@@ -5,7 +5,7 @@ import traceback
 
 import boto3
 
-from utils.aws_utils import setup_s3_client, put_template_into_s3, build_role_arn
+from utils.aws_utils import setup_s3_client, put_template_into_s3
 from utils.pipeline_utils import put_job_failure, put_job_success, continue_job_later, \
     PipelineUserParameters, PipelineStackConfig, load_pipeline_artifacts, \
     parse_override_params, get_file_from_artifact, generate_output_artifact
@@ -60,7 +60,9 @@ def generate_template_and_config(s3, cf, job_id, params: PipelineUserParameters,
     template_url = put_template_into_s3(job_id, params.TemplateFile, json.dumps(template))
     update = stack_exists(cf, params.StackName)
     config = PipelineStackConfig(config, template,
-                                 parse_override_params(s3, params.ParametersOverride, in_artifacts), update)
+                                 parse_override_params(s3, params.ParameterOverrides, in_artifacts),
+                                 update,
+                                 params.Capabilities)
 
     return template_url, config, update
 
@@ -89,7 +91,7 @@ def delete_stack_handler(job_id, job_data, params: PipelineUserParameters):
     if 'continuationToken' in job_data:
         check_stack_status(cf, job_id, params.StackName)
     else:
-        stack_delete(cf, params.StackName, build_role_arn(params.AccountId, params.RoleName))
+        stack_delete(cf, params.StackName, params.RoleArn)
         continue_job_later(job_id, 'Stack create started')
 
 
@@ -105,7 +107,7 @@ def create_replace_change_set_handler(job_id, job_data, params: PipelineUserPara
         template_url, config, update = generate_template_and_config(s3, cf, job_id, params, in_artifacts)
 
         create_change_set(cf, params.StackName, params.ChangeSetName,
-                          template_url, config, update, build_role_arn(params.AccountId, params.RoleName))
+                          template_url, config, params.RoleArn)
         continue_job_later(job_id, 'Stack create started')
 
 
@@ -130,7 +132,7 @@ def create_update_stack_handler(job_id, job_data, params: PipelineUserParameters
     else:
         template_url, config, update = generate_template_and_config(s3, cf, job_id, params, in_artifacts)
         start_stack_create_or_update(cf, job_id, params.StackName,
-                                     template_url, config, update, build_role_arn(params.AccountId, params.RoleName))
+                                     template_url, config, update, params.RoleArn)
 
 
 def handler(event, ctx):
@@ -151,18 +153,18 @@ def handler(event, ctx):
         params = PipelineUserParameters(job_data, ctx)
         in_artifacts = load_pipeline_artifacts(job_data.get('inputArtifacts', []), params.Region)
 
-        if params.Operation == 'CREATE_UPDATE_STACK':
+        if params.ActionMode == 'CREATE_UPDATE':
             create_update_stack_handler(job_id, job_data, params, in_artifacts)
-        elif params.Operation == 'DELETE_STACK':
+        elif params.ActionMode == 'DELETE_ONLY':
             delete_stack_handler(job_id, job_data, params)
-        elif params.Operation == 'REPLACE_STACK':
+        elif params.ActionMode == 'REPLACE_ON_FAILURE':
             replace_stack_handler(job_id)
-        elif params.Operation == 'CREATE_REPLACE_CHANGE_SET':
+        elif params.ActionMode == 'CHANGE_SET_REPLACE':
             create_replace_change_set_handler(job_id, job_data, params, in_artifacts)
-        elif params.Operation == 'EXECUTE_CHANGE_SET':
+        elif params.ActionMode == 'CHANGE_SET_EXECUTE':
             execute_change_set_handler(job_id, job_data, params)
         else:
-            raise ValueError("Unknown operation mode requested: {}".format(params.Operation))
+            raise ValueError("Unknown operation mode requested: {}".format(params.ActionMode))
 
     except Exception as e:
         logger.error('Function failed due to exception. {}'.format(e))
