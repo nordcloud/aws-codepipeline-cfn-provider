@@ -1,5 +1,8 @@
 # aws-codepipeline-cfn-provider
 
+[![Lintly](https://lintly.com/gh/nordcloud/aws-codepipeline-cfn-provider/badge.svg)](https://lintly.com/gh/nordcloud/aws-codepipeline-cfn-provider/)
+
+
 CodePipeline built-in cfn provider has a limitation that a cfn template size can't exceed 51kb. 
 
 `aws-codepipeline-cfn-provider` solves this problem by providing an alternative cfn provider implemented as a Lambda. 
