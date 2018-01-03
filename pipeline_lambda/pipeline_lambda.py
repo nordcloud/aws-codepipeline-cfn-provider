@@ -41,7 +41,7 @@ def check_stack_status(cf, job_id, stack):
         return True
     elif status in ['UPDATE_IN_PROGRESS', 'UPDATE_ROLLBACK_IN_PROGRESS',
                     'UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS', 'CREATE_IN_PROGRESS',
-                    'ROLLBACK_IN_PROGRESS', 'DELETE_IN_PROGRESS']:
+                    'ROLLBACK_IN_PROGRESS', 'DELETE_IN_PROGRESS', 'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS']:
         continue_job_later(job_id, 'Stack still in progress: {}'.format(status))
     elif status in ['REVIEW_IN_PROGRESS']:
         put_job_failure(job_id, 'Stack in REVIEW_IN_PROGRESS state')
